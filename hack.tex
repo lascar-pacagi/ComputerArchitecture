@@ -1,0 +1,509 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[french,algoruled,vlined]{algorithm2e}
+
+\setlength{\textheight}{245mm}
+\setlength{\textwidth}{162mm}
+\setlength{\topmargin}{-11mm}
+\setlength{\oddsidemargin}{+1mm}
+\setlength{\unitlength}{1cm}
+
+\begin{document}
+\noindent
+{\bf Département d'informatique \hfill Architecture} \\
+$3^{\grave{e}me}$ année
+\vspace*{1cm}
+\begin{center}
+{\large \bf Hack Computer}
+\end{center}
+
+\renewcommand{\labelitemi}{$\bullet$}
+\renewcommand{\labelitemii}{$\star$}
+
+
+Nous allons présenter un ordinateur simple, \emph{The Hack Computer}, tiré du livre \emph{The Elements of Computing
+Systems}.\\
+Une machine peut être décrite à partir de ses composants élémentaires, en expliquant comment elle est construite
+à partir de ceux-ci. Elle peut aussi être décrite de manière plus abstraite par ce qu'on appelle son modèle de
+programmation qui consiste en~:\\
+\begin{itemize}
+\item une collection de registres~;
+\item un ensemble d'instructions~;
+\item les spécifications de l'espace d'adressage (mémoire, entrées/sorties).\\
+\end{itemize}
+
+
+Nous allons tout d'abord présenter le modèle de programmation de l'ordinateur \emph{Hack}, puis une vue d'ensemble
+de l'architecture de cette machine que vous devrez réaliser dans la section exercices.
+
+\section{Modèle de programmation}
+
+La machine \emph{Hack} est une machine basée sur le modèle de \emph{von Neumann}. C'est une machine consituée
+d'une unité centrale, de deux modules de mémoire séparés -- un pour les instructions et un pour les données --,
+d'un écran et d'un clavier.\\
+
+\begin{itemize}
+
+\item \textbf{Espace d'adressage.} L'ordinateur \emph{Hack} possède deux espaces d'adressage séparés~: une mémoire
+pour les instructions et une mémoire pour les données. La mémoire
+contenant les instructions est une mémoire morte (on peut l'assimiler à une cartouche dans une console de jeux).
+Chacune de ces mémoires contient $32K$ mots de $16$ bits.\\
+
+
+\item \textbf{Entrées/Sorties.} Les données associés à l'écran et au clavier sont contenues dans la mémoire
+des données. Pour écrire à l'écran, il faut donc modifier certains mots contenus à certaines adresses, et pour
+lire la dernière touche pressée par l'utilisateur, il faut lire un certain mot en mémoire. Nous ne nous soucierons
+pas des entrées/sorties dans la suite de ce chapitre.\\
+
+
+\item \textbf{Registres.} Dans l'unité centrale de la machine \emph{Hack}, deux registres, appelés \verb+A+
+et \verb+D+, sont mis à la disposition
+du programmeur. Ces registres peuvent être manipulés explicitement par des opérations arithmétiques et logiques
+comme \verb+A=D-1+ ou \verb+D=+$\neg$\verb+A+ (``$\neg$'' représente le ``non'' bit à bit). Tandis que le registre \emph{D}
+est utilisé seulement pour stocker des données, le registre \verb+A+ sert aussi de registre d'adresse. En fonction
+du contexte d'utilisation, le contenu de \verb+A+ sera interprété comme une donnée, ou comme une adresse dans la
+mémoire des données ou dans la mémoire des instructions. En effet, les instructions de la machine \emph{Hack}
+sont codées sur $16$ bits et les adresses sont sur $15$ bits. Il est donc impossible de mettre dans une même
+instruction le code de celle-ci et l'adresse. Les instructions accédant à la mémoire s'effectuent en deux étapes.
+Par exemple, pour exécuter l'instruction \verb+D=Mémoire[50]-1+, on chargera d'abord la valeur $50$
+dans le registre \verb+A+, puis on exécutera l'instruction assembleur \verb+D=Mémoire[A]-1+. Les deux instructions en
+assembleur \emph{Hack} correspondant à ces deux opérations sont notées~:
+\begin{center}
+\begin{verbatim}
+  @50
+  D=M-1
+\end{verbatim}
+\end{center}
+l'instruction \verb+@50+ ayant pour signification de charger la valeur $50$ dans le registre \verb+A+.\\
+%Nous donnerons un exemple de programme écrit
+%en assembleur \emph{Hack}, ainsi que sa traduction en langage machine dans la section 3.1.3.\\
+Le registre \verb+A+ est aussi utilisé pour faciliter l'accès à la mémoire des instructions. De
+la même manière que pour accéder à la mémoire de données, l'instruction \verb+jump+ de
+la machine \emph{Hack} ne spécifie pas l'adresse de saut. Là encore, c'est le registre \verb+A+ qui
+contient cette adresse.\\
+
+\end{itemize}
+
+Nous allons maintenant décrire les deux types d'instruction de la machine \emph{Hack}.
+
+%\newpage
+
+\subsection{Instruction de type A}
+
+L'instruction de type A est utilisée pour mettre à jour le contenu du registre \verb+A+ avec
+une donnée de $15$ bits. En assembleur \emph{Hack}, cette instruction est notée~:
+\begin{verbatim}
+ @valeur
+\end{verbatim}
+où \verb+valeur+ est une chaîne de $15$ bits. En language machine, cette instruction est codée~:\\
+\\
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+0 & $v_1$ & $v_2$ & $v_3$ & $v_4$ & $v_5$ & $v_6$ & $v_7$ & $v_8$ & $v_9$ & $v_{10}$
+& $v_{11}$ & $v_{12}$ & $v_{13}$ & $v_{14}$ & $v_{15}$\\
+\hline
+\end{tabular}\\
+
+\noindent chaque $v_i$ peut prendre la valeur $0$ ou $1$.\\
+
+L'instruction de type A a trois usages différents~:
+\begin{itemize}
+\item entrer une constante dans l'ordinateur~;
+\item spécifier l'adresse d'une donnée en mémoire~;
+\item spécifier l'adresse de saut dans la mémoire des instructions.
+\end{itemize}
+
+\subsection{Instruction de type C}
+
+Une instruction de type C spécifie~:
+\begin{itemize}
+\item quoi calculer~;
+\item où stocker le résultat du calcul~;
+\item quelle instruction exécuter après.
+\end{itemize}
+
+En assembleur \emph{Hack}, cette instruction est notée~:
+\begin{verbatim}
+ dest=comp;jump // les champs "dest" ou "jump"
+                // peuvent être vides
+                // si "dest" est vide, le "=" peut être omis
+                // si "jump" est vide, le ";" peut être omis
+\end{verbatim}
+En language machine, cette instruction est codée~:\\
+\\
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+1 & ? & ? & $a$ & $c_1$ & $c_2$ & $c_3$ & $c_4$ & $c_5$ & $c_6$ & $d_1$
+& $d_2$ & $d_3$ & $j_1$ & $j_2$ & $j_3$\\
+\hline
+\end{tabular}\\
+
+Le bit le plus à gauche est le code de l'instruction de type C qui est $1$. Les deux bits suivants
+ne sont pas utilisés et leur valeur n'est pas importante. Les bits qui suivent correspondent aux trois
+parties de l'instruction assembleur. La sémantique générale de l'instruction assembleur est la suivante~:
+\begin{itemize}
+\item le champ \verb+comp+ (correspondant à la valeur $a$ et aux valeurs $c_i$) instruit l'\emph{ALU} du calcul à effectuer~;
+\item le champ \verb+dest+ (correspondant aux valeurs $d_i$) indique où stocker la valeur calculée par l'\emph{ALU}~;
+\item le champ \verb+jump+ (correspondant aux valeurs $j_i$) indique une condition de saut pour savoir quelle instruction exécuter après celle-ci.\\
+\end{itemize}
+
+Avant de détailler chaque partie de l'instruction de type C, nous donnons dans la table \ref{table:add} un programme
+en assembleur \emph{Hack} permettant de calculer la somme des nombres de $1$ à $100$.
+
+\begin{table}[!htpb]
+\begin{verbatim}
+     @i     // i représente une adresse en mémoire
+     M=1    // i=1
+     @sum   // sum représente une adresse en mémoire
+     M=0    // sum=0
+(LOOP)
+     @i
+     D=M    // D=i
+     @100
+     D=D-A  // D=i-100
+     @END
+     D;JGT  // si (i-100)>0 aller en END
+     @i
+     D=M    // D=i
+     @sum
+     M=D+M  // sum=sum+i
+     @i
+     M=M+1  // i=i+1
+     @LOOP
+     0;JMP  // aller en LOOP
+(END)
+\end{verbatim}
+\caption{Programme en assembleur \emph{Hack} permettant de calculer la somme de $1$ à $100$}
+\label{table:add}
+\end{table}
+
+\subsubsection{Partie calcul de l'instruction}
+
+Afin de comprendre les spécifications de la partie \verb+comp+ d'une
+instruction de type C, nous présentons l'unité arithmétique et logique de la machine \emph{Hack}
+à la figure \ref{fig:alu}. Les spécifications de cette \emph{UAL} sont données
+dans la table \ref{table:alu} et le fonctionnement interne et décrit par
+l'algorithme \ref{algo:alu}.
+
+\begin{figure}[!htpb]
+\begin{center}
+\includegraphics[width=9cm]{alu_boitier.eps}
+\caption{L'unité arithmétique et logique de la machine \emph{Hack}}
+\label{fig:alu}
+\end{center}
+\end{figure}
+
+
+\begin{table}[!htpb]
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$zx$ & $nx$ & $zy$ & $ny$ & $f$ & $no$ & $out$\\
+\hline
+\hline
+$1$ & $0$ & $1$ & $0$ & $1$ & $0$ & $0$\\
+\hline
+$1$ & $1$ & $1$ & $1$ & $1$ & $1$ & $1$\\
+\hline
+$1$ & $1$ & $1$ & $0$ & $1$ & $0$ & $-1$\\
+\hline
+$0$ & $0$ & $1$ & $1$ & $0$ & $0$ & $x$\\
+\hline
+$1$ & $1$ & $0$ & $0$ & $0$ & $0$ & $y$\\
+\hline
+$0$ & $0$ & $1$ & $1$ & $0$ & $1$ & $\neg x$\\
+\hline
+$1$ & $1$ & $0$ & $0$ & $0$ & $1$ & $\neg y$\\
+\hline
+$0$ & $0$ & $1$ & $1$ & $1$ & $1$ & $-x$\\
+\hline
+$1$ & $1$ & $0$ & $0$ & $1$ & $1$ & $-y$\\
+\hline
+$0$ & $1$ & $1$ & $1$ & $1$ & $1$ & $x+1$\\
+\hline
+$1$ & $1$ & $0$ & $1$ & $1$ & $1$ & $y+1$\\
+\hline
+$0$ & $0$ & $1$ & $1$ & $1$ & $0$ & $x-1$\\
+\hline
+$1$ & $1$ & $0$ & $0$ & $1$ & $0$ & $y-1$\\
+\hline
+$0$ & $0$ & $0$ & $0$ & $1$ & $0$ & $x+y$\\
+\hline
+$0$ & $1$ & $0$ & $0$ & $1$ & $1$ & $x-y$\\
+\hline
+$0$ & $0$ & $0$ & $1$ & $1$ & $1$ & $y-x$\\
+\hline
+$0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $x\wedge y$\\
+\hline
+$0$ & $1$ & $0$ & $1$ & $0$ & $1$ & $x\vee y$\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Table de vérité de l'unité arithmétique et logique}
+\label{table:alu}
+\end{table}
+
+
+\begin{algorithm}
+\Si{$zx = 1$}
+    {
+      $x \leftarrow 0$
+    }
+\Si{$nx = 1$}
+   {
+     $x \leftarrow \neg x$
+   }
+\Si{$zy = 1$}
+    {
+      $y \leftarrow 0$
+    }
+\Si{$ny = 1$}
+   {
+     $y \leftarrow \neg y$
+   }
+\eSi{$f = 1$}
+    {
+      $out \leftarrow x+y$
+    }
+    {
+      $out \leftarrow x \wedge y$
+    }
+\Si{$no = 1$}
+   {
+     $out \leftarrow \neg out$
+   }
+\eSi{$out = 0$}
+    {
+      $zr \leftarrow 1$
+    }
+    {
+      $zr \leftarrow 0$
+    }
+\eSi{$out < 0$}
+    {
+      $ng \leftarrow 1$
+    }
+    {
+      $ng \leftarrow 0$
+    }
+\caption{Spécification de l'unité arithmétique et logique de la machine \emph{Hack}}
+\label{algo:alu}
+\end{algorithm}
+
+La table \ref{table:comp} donne la signification des différentes valeurs autorisées pour $a$ et les $c_i$. Par exemple~:
+\begin{itemize}
+\item à la ligne $4$, lorsque $a=0$, la valeur calculée par l'instruction est le contenu du registre \verb+D+~;
+\item à la ligne $5$, lorsque $a=1$, la valeur calculée par l'instruction est le contenu de \verb+Mémoire[A]+~;
+\item à la ligne $14$, lorsque $a=1$, la valeur calculée par l'instruction est le contenu de \verb+Mémoire[A]+ plus le
+contenu de \verb+D+.
+\end{itemize}
+
+\begin{table}[!htbp]
+\begin{center}
+\begin{tabular}{|c||c|c|c|c|c|c||c|}
+\hline
+\multicolumn{8}{|c|}{Partie \textit{comp} de l'instruction de type C}\\
+\hline
+$a = 0$ & $c_1$ & $c_2$ & $c_3$ & $c_4$ & $c_5$ & $c_6$ & $a = 1$\\
+(mnémonique) & & & & & & & (mnémonique)\\
+\hline
+$0$ & $1$ & $0$ & $1$ & $0$ & $1$ & $0$ & \\
+\hline
+$1$ & $1$ & $1$ & $1$ & $1$ & $1$ & $1$ & \\
+\hline
+$-1$ & $1$ & $1$ & $1$ & $0$ & $1$ & $0$ & \\
+\hline
+$D$ & $0$ & $0$ & $1$ & $1$ & $0$ & $0$ & \\
+\hline
+$A$ & $1$ & $1$ & $0$ & $0$ & $0$ & $0$ & $M$\\
+\hline
+$\neg D$ & $0$ & $0$ & $1$ & $1$ & $0$ & $1$ & \\
+\hline
+$\neg A$ & $1$ & $1$ & $0$ & $0$ & $0$ & $1$ & $\neg M$\\
+\hline
+$-D$ & $0$ & $0$ & $1$ & $1$ & $1$ & $1$ & \\
+\hline
+$-A$ & $1$ & $1$ & $0$ & $0$ & $1$ & $1$ & $-M$\\
+\hline
+$D+1$ & $0$ & $1$ & $1$ & $1$ & $1$ & $1$ & \\
+\hline
+$A+1$ & $1$ & $1$ & $0$ & $1$ & $1$ & $1$ & $M+1$\\
+\hline
+$D-1$ & $0$ & $0$ & $1$ & $1$ & $1$ & $0$ & \\
+\hline
+$A-1$ & $1$ & $1$ & $0$ & $0$ & $1$ & $0$ & $M-1$\\
+\hline
+$D+A$ & $0$ & $0$ & $0$ & $0$ & $1$ & $0$ & $D+M$\\
+\hline
+$D-A$ & $0$ & $1$ & $0$ & $0$ & $1$ & $1$ & $D-M$\\
+\hline
+$A-D$ & $0$ & $0$ & $0$ & $1$ & $1$ & $1$ & $M-D$\\
+\hline
+$D \wedge A$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $D\wedge M$\\
+\hline
+$D \vee A$ & $0$ & $1$ & $0$ & $1$ & $0$ & $1$ & $D\vee M$\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Spécification de la partie \emph{comp} d'une instruction de type C}
+\label{table:comp}
+\end{table}
+
+\subsubsection{Partie destination de l'instruction}
+
+La valeur calculée par la partie \emph{comp} de l'instruction de type C peut être
+stockée dans différentes destinations spécifiées par les $3$ bits de la partie \emph{dest}
+de l'instruction. La table \ref{table:dest} donne la signification des différentes combinaisons des $d_i$. Par exemple,
+la valeur \verb+011+ pour les bits $d_1$, $d_2$ et $d_3$ a pour effet de mettre
+le résultat du calcul dans le registre \verb+D+ et \verb+Mémoire[A]+.
+
+\begin{table}[!htbp]
+\begin{center}
+\begin{tabular}{|c|c|c||c|c|}
+\hline
+\multicolumn{5}{|c|}{Partie \textit{dest} de l'instruction de type C}\\
+\hline
+$d_1$ & $d_2$ & $d_3$ & mnémonique & destination\\
+\hline
+$0$ & $0$ & $0$ & $null$ & la valeur n'est pas stockée\\
+\hline
+$0$ & $0$ & $1$ & $M$ & Mémoire[$A$]\\
+\hline
+$0$ & $1$ & $0$ & $D$ & le registre $D$\\
+\hline
+$0$ & $1$ & $1$ & $MD$ & Mémoire[$A$] et registre $D$\\
+\hline
+$1$ & $0$ & $0$ & $A$ & registre $A$\\
+\hline
+$1$ & $0$ & $1$ & $AM$ & registre $A$ et Mémoire[$A$]\\
+\hline
+$1$ & $1$ & $0$ & $AD$ & registres $A$ et $D$\\
+\hline
+$1$ & $1$ & $1$ & $AMD$ & registres $A$ et $D$ et Mémoire[$A$]\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Spécification de la partie \emph{dest} d'une instruction de type C}
+\label{table:dest}
+\end{table}
+
+
+\subsubsection{Partie saut de l'instruction}
+
+Le champ \emph{jump} de l'instruction de type C indique à l'ordinateur quoi faire après l'exécution de l'instruction courante.
+L'ordinateur peut chercher et exécuter l'instruction suivante (ce qu'il fait par défaut) ou aller chercher et exécuter
+une instruction se trouvant à un autre endroit dans le programme. Dans ce dernier cas, le registre \verb+A+ contient l'adresse,
+dans la \emph{ROM}, où chercher la nouvelle instruction. Le saut va dépendre de la valeur des $j_i$ bits de l'instruction
+et de la sortie de l'\emph{UAL}. La table \ref{table:jump} donne la signification des différentes combinaisons des $j_i$.
+Par exemple~:
+\begin{itemize}
+\item si $j_1$, $j_2$ et $j_3$ valent \verb+001+, la prochaine instruction sera celle dont l'adresse est
+dans le registre \verb+A+ si la sortie de l'\emph{UAL} est strictement positive~;
+\item si $j_1$, $j_2$ et $j_3$ valent \verb+000+, la prochaine instruction sera celle dont l'adresse est la valeur
+du compteur ordinal plus un.
+\end{itemize}
+
+\begin{table}[!htbp]
+\begin{center}
+\begin{tabular}{|c|c|c||c|c|}
+\hline
+\multicolumn{5}{|c|}{Partie \textit{jump} de l'instruction de type C}\\
+\hline
+$j_1$ & $j_2$ & $j_3$ & mnémonique & effet\\
+$(out < 0)$ & $(out = 0)$ & $(out > 0)$ & &\\
+\hline
+$0$ & $0$ & $0$ & $null$ & pas de saut\\
+\hline
+$0$ & $0$ & $1$ & $JGT$ & saut si $out > 0$\\
+\hline
+$0$ & $1$ & $0$ & $JEQ$ & saut si $out = 0$\\
+\hline
+$0$ & $1$ & $1$ & $JGE$ & saut si $out \ge 0$\\
+\hline
+$1$ & $0$ & $0$ & $JLT$ & saut si $out < 0$\\
+\hline
+$1$ & $0$ & $1$ & $JNE$ & saut si $out \ne 0$\\
+\hline
+$1$ & $1$ & $0$ & $JLE$ & saut si $out \le 0$\\
+\hline
+$1$ & $1$ & $1$ & $JMP$ & saut inconditionnel\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Spécification de la partie \emph{jump} d'une instruction de type C}
+\label{table:jump}
+\end{table}
+
+\section{Architecture}
+
+L'architecture générale de la machine \emph{Hack} est décrite dans la figure \ref{fig:hack}.
+La mémoire des données contient des mots de $16$ bits et ne charge au front montant de
+l'horloge que si \texttt{load} est à \texttt{1}.
+L'unité centrale est à construire dans l'exercice de la section \ref{section:uc}. La mémoire des
+instructions est une mémoire morte qui présente en sortie le contenu de l'adresse spécifiée en entrée. Enfin,
+l'unité centrale et la mémoire des données sont reliées à la même horloge.
+
+\begin{figure}[!htpb]
+\begin{center}
+\includegraphics[width=13cm]{hack.eps}
+\caption{Architecture de la machine \emph{Hack}}
+\label{fig:hack}
+\end{center}
+\end{figure}
+
+\section{Exercices}
+
+\subsection{Traduction de l'assembleur \emph{Hack} vers le langage machine}
+
+Traduire en langage machine les $11$ premières lignes du programme de la table \ref{table:add}.
+
+\subsection{Unité Arithmétique et Logique}
+
+Réaliser l'unité arithmétique et logique de la machine \emph{Hack}.
+
+\subsection{Unité centrale}
+\label{section:uc}
+
+\begin{figure}[!htpb]
+\begin{center}
+\includegraphics[width=14cm]{cpu.eps}
+\caption{Unité centrale de la machine \emph{Hack}}
+\label{fig:cpu}
+\end{center}
+\end{figure}
+
+La figure \ref{fig:cpu} donne une ébauche de l'unité centrale de la machine \emph{Hack}.
+Les \emph{c} entourés d'un cercle représentent le contrôle qu'il vous reste à câbler en fonction du langage machine.
+Sur cette figure, on peut voir le compteur ordinal (\emph{PC}) dont le fonctionnement est décrit
+par l'algorithme \ref{algo:pc}.
+
+\begin{algorithm}[!bhtp]
+\eSi{$reset(t-1)$}
+    {
+      $out(t) = 0$
+    }
+    {
+      \eSi{$load(t-1)$}
+          {
+            $out(t) = in(t-1)$
+          }
+          {
+            \eSi{$inc(t-1)$}
+                {
+                  $out(t) = out(t-1) + 1$
+                }
+                {
+                  $out(t) = out(t-1)$
+                }
+          }
+    }
+\caption{Spécification du compteur ordinal}
+\label{algo:pc}
+\end{algorithm}
+
+\end{document}

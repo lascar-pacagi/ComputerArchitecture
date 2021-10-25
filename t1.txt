@@ -1,0 +1,128 @@
+printf@plt:
+ jmpq   *0x200bb2(%rip)        # 601018 <printf@GLIBC_2.2.5>
+ pushq  $0x0
+ jmpq   400450 <.plt>
+clock@plt:
+ jmpq   *0x200baa(%rip)        # 601020 <clock@GLIBC_2.2.5>
+ pushq  $0x1
+ jmpq   400450 <.plt>
+main:
+ push   %rbp
+ mov    $0x605060,%edx
+ xor    %ecx,%ecx
+ push   %rbx
+ sub    $0x18,%rsp
+ movdqa 0x33b(%rip),%xmm6        # 4007d0 <_IO_stdin_used+0x20>
+ movdqa 0x343(%rip),%xmm4        # 4007e0 <_IO_stdin_used+0x30>
+ mov    %ecx,0xc(%rsp)
+ movd   0xc(%rsp),%xmm7
+ lea    -0x4000(%rdx),%rax
+ movdqa %xmm6,%xmm2
+ pshufd $0x0,%xmm7,%xmm3
+ movdqa %xmm3,%xmm5
+ psrlq  $0x20,%xmm5
+ movdqa %xmm2,%xmm1
+ movdqa %xmm2,%xmm0
+ paddd  %xmm4,%xmm2
+ add    $0x10,%rax
+ psrlq  $0x20,%xmm1
+ pmuludq %xmm3,%xmm0
+ pmuludq %xmm5,%xmm1
+ pshufd $0x8,%xmm0,%xmm0
+ pshufd $0x8,%xmm1,%xmm1
+ punpckldq %xmm1,%xmm0
+ movaps %xmm0,-0x10(%rax)
+ cmp    %rdx,%rax
+ jne    4004c0 <main+0x40>
+ add    $0x1,%ecx
+ lea    0x4000(%rax),%rdx
+ cmp    $0x1000,%ecx
+ jne    40049d <main+0x1d>
+ callq  400470 <clock@plt>
+ xor    %ebp,%ebp
+ mov    $0x32,%edi
+ pxor   %xmm4,%xmm4
+ mov    %rax,%rbx
+ mov    $0x4605060,%ecx
+ mov    $0x605060,%eax
+ lea    -0x4000(%rax),%rdx
+ pxor   %xmm1,%xmm1
+ xchg   %ax,%ax
+ movdqa (%rdx),%xmm0
+ movdqa %xmm4,%xmm2
+ add    $0x10,%rdx
+ pcmpgtd %xmm0,%xmm2
+ movdqa %xmm0,%xmm3
+ punpckldq %xmm2,%xmm3
+ punpckhdq %xmm2,%xmm0
+ paddq  %xmm3,%xmm1
+ paddq  %xmm0,%xmm1
+ cmp    %rax,%rdx
+ jne    400530 <main+0xb0>
+ movdqa %xmm1,%xmm0
+ psrldq $0x8,%xmm0
+ paddq  %xmm1,%xmm0
+ movq   %xmm0,%rax
+ add    %rax,%rbp
+ lea    0x4000(%rdx),%rax
+ cmp    %rax,%rcx
+ jne    400523 <main+0xa3>
+ sub    $0x1,%edi
+ jne    40051e <main+0x9e>
+ callq  400470 <clock@plt>
+ pxor   %xmm0,%xmm0
+ mov    %rbp,%rsi
+ mov    $0x4007b4,%edi
+ sub    %rbx,%rax
+ cvtsi2sd %rax,%xmm0
+ mov    $0x1,%eax
+ divsd  0x24b(%rip),%xmm0        # 4007f0 <_IO_stdin_used+0x40>
+ callq  400460 <printf@plt>
+ add    $0x18,%rsp
+ xor    %eax,%eax
+ pop    %rbx
+ pop    %rbp
+ retq
+ nopw   %cs:0x0(%rax,%rax,1)
+ nopl   (%rax)
+_dl_relocate_static_pie:
+ repz retq
+ nopw   %cs:0x0(%rax,%rax,1)
+ nopl   0x0(%rax)
+test(int):
+ test   %edi,%edi
+ jle    40072c <test(int)+0x7c>
+ xor    %r8d,%r8d
+ xor    %eax,%eax
+ pxor   %xmm4,%xmm4
+ mov    $0x4605060,%esi
+ mov    $0x605060,%ecx
+ lea    -0x4000(%rcx),%rdx
+ pxor   %xmm1,%xmm1
+ nopw   0x0(%rax,%rax,1)
+ movdqa (%rdx),%xmm0
+ movdqa %xmm4,%xmm2
+ add    $0x10,%rdx
+ pcmpgtd %xmm0,%xmm2
+ movdqa %xmm0,%xmm3
+ punpckldq %xmm2,%xmm3
+ punpckhdq %xmm2,%xmm0
+ paddq  %xmm3,%xmm1
+ paddq  %xmm0,%xmm1
+ cmp    %rdx,%rcx
+ jne    4006d8 <test(int)+0x28>
+ movdqa %xmm1,%xmm0
+ add    $0x4000,%rcx
+ psrldq $0x8,%xmm0
+ paddq  %xmm1,%xmm0
+ movq   %xmm0,%rdx
+ add    %rdx,%rax
+ cmp    %rsi,%rcx
+ jne    4006c7 <test(int)+0x17>
+ add    $0x1,%r8d
+ cmp    %r8d,%edi
+ jne    4006c2 <test(int)+0x12>
+ retq
+ xor    %eax,%eax
+ retq
+ nop
